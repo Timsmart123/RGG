@@ -20,10 +20,71 @@ checkout → assign book + due date
 return   → calculate overdue fine + make book available
 '''
 
+
 '''
+dict that stores 
+- Libary number
+
+users = {
+    'Sam' : '345934',
+    'Tim' : '345645',
+    'Gareth' : '344435',
+    'Harley' : '345435',
+    'Riley' : '340884',
+    }
+
+
+# Lib_user[name][]
+
+Lib_users = {
+    'sam' : {
+        'name' : 'Sam',
+        'library num': 345934,
+        'fine': 2.00,
+        'borrowed' : {
+                'name': 'Macbeth',
+                'due date': '30/12/26'
+            },
+        
+        },
+    'Tim' : {
+        'name' : 'Tim',
+        'library num': '345645',
+        'fine': 3.50,
+        'borrowed' : {
+                'name': 'A Christmas Carol',
+                'due date': '05/12/26',
+            },
+        
+        },
+    
+    }
+    
+- ISBN number
+books = {
+    'Sam' : '345934',
+    'Tim' : '345645',
+    'Gareth' : '344435',
+    'Harley' : '345435',
+    'Riley' : '340884',
+    
+    }
+- stored users and lib num
 
 later feats:
-    - api take and data base
+    - api take
+'''
+
+''' options:
+        1. View available books
+            a. show available books - sorted alphabetical order
+            b. search for a book
+        2. borrow a book
+
+        3. return a book
+        
+        4. pay fine
+    
 '''
 
 books = [
@@ -40,7 +101,7 @@ books = [
   {
   'name' : 'The Bible',
   'id' : 123402,
-  'here' : False
+  'here' : True
 }, 
   {
   'name' : 'Inmates',
@@ -63,20 +124,12 @@ members = [
   'name' : 'Sam',
   'id' : 345930,
   'fine' : 2.00,
-  'borrowed' : [
-    {
+  'borrowed' : [{
        'name': 'Into the bad lands',
        'id' : 123401,
        'timeStamp': datetime.now(),
-       'due': datetime.now() + timedelta(days=3),
-            },
-    {
-       'name': 'The Bible',
-       'id' : 123402,
-       'timeStamp': datetime.now(),
-       'due': datetime.now() + timedelta(days=5),
-            },
-  ],
+       'due': datetime.now() + timedelta(weeks=3),
+            }],
 }, 
   {
   'name' : 'Kay',
@@ -120,7 +173,7 @@ def UIL(inp, datatype = str):
         try:
             question = datatype(input(inp))
 
-            if datatype == str and not question.strip():
+            if datatype is str and not question.strip():
                 raise ValueError
 
             return question
@@ -163,11 +216,11 @@ def get_book_Id():
       
 def update_borrow_rec(userId,bookId) :
   for member in members:
-    if member['id'] == userId and member['fine'] <= 5.00:
+    if member['id'] == userId and member['fine'] <= 3.00:
       for book in books:
-        if book['id'] == bookId and book['here'] == True:
+        if book['id'] == bookId and book['here']:
             #due date check
-              print(f'Lending {book['name']} to {member['name']} ')
+              print(f'Lending {book['name']} to {member['name']}  ')
               
               # due datee
               timeStamp = datetime.now()
@@ -192,12 +245,12 @@ def update_borrow_rec(userId,bookId) :
           
               book['here'] = False
               return True
-        elif book['here'] == False:
+        elif not book['here']:
           print('Book unavailable here, check available books')
           break
     elif member['id'] == userId:
               print(f"{member['name']} owes {member['fine']}")
-              print('User needs to owe less than £5')
+              print('User needs to owe less than $3')
               print('Pay up fine at desk to checkout')
               libsys()
 
@@ -205,7 +258,7 @@ def update_return_rec(userId,bookId):
   for member in members:
     if member['id'] == userId:
       for book in books:
-        if book['id'] == bookId and book['here'] == False:
+        if book['id'] == bookId and not book['here']:
             #due date check
               print(f'Returning {book['name']} from {member['name']}  ')
 
@@ -216,18 +269,18 @@ def update_return_rec(userId,bookId):
                     late_days = -(datetime.now() - borrowed['due']).days
                     fine = late_days * 0.50
                     if fine > 0:
-                      print(f'{fine} added to account because you were {late_days} days late')
+                      print(f'{fine} added to account because you were {late_days} late')
                       member['fine'] = member['fine'] + fine
                       print(f'{member['name']} total fine is now {member['fine']}')
                     # Update member borrowed rec
                     member['borrowed'].remove(borrowed)
-                    book['here'] = True
                     
                   else:
                     print(f"{member['name']} didn't borrow borrow {book['name']}")
                           
+              book['here'] = True
               return True
-        elif book['here'] == False:
+        elif not book['here']:
           print('Book already available here, check available books')
           break
 
@@ -240,20 +293,18 @@ def returnBook():
   bookId = get_book_Id()
   userId = get_user_Id()
   if update_return_rec(userId,bookId):
-        print('Return Complete') 
+    print('Return Complete') 
   else:
     print('Return failed')
-  libsys()
 
 def checkout():
   # Get Book
   bookId = get_book_Id()
   userId = get_user_Id()
   if update_borrow_rec(userId,bookId):
-        print('Checkout Complete') 
+    print('Checkout Complete') 
   else:
     print('Checkout failed')
-  libsys()
 
 
 def payFine():
@@ -261,30 +312,33 @@ def payFine():
       
 def libsys():
     # Display Options and request user choice of action
-  
-  menu_option =  get_menu()
-
-  if menu_option == 1:
-    print('\n=== Available Books ===')
-    for book in books:
-      if book['here'] == True :
-        print(f'  {book['id']} - {book['name']}')
-    libsys()
-  
-  elif menu_option == 2:
-    print('\n=== Checkout Book ===')
-    checkout()
+    while True: 
+      menu_option =  get_menu()
     
-  elif menu_option == 3:
-    print('\n=== Return a Book ===')
-    returnBook()
-    
-  elif menu_option == 4:
-    print("\n=== Pay fine ===")
-    payFine()
-    
-  elif menu_option == 5:
-    print("\n=== Thank You for using Tim's Libery ===")
-    raise SystemExit()
+      if menu_option == 1:
+        print('\n=== Available Books ===')
+        for book in books:
+          if book['here']:
+            print(f'  {book['id']} - {book['name']}')
+        
+      
+      elif menu_option == 2:
+        print('\n=== Checkout Book ===')
+        checkout()
+        
+      elif menu_option == 3:
+        print('\n=== Return a Book ===')
+        returnBook()
+        
+      elif menu_option == 4:
+        print("\n=== Pay fine ===")
+        payFine()
+        
+      elif menu_option == 5:
+        print("\n=== Thank You for using Tim's Libery ===")
+        raise SystemExit()
 
 libsys()
+
+
+
